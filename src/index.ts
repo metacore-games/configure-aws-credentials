@@ -14,10 +14,12 @@ import {
   unsetCredentials,
   verifyKeys,
 } from './helpers';
+import { writeProfileFiles } from './profileManager';
 
 const DEFAULT_ROLE_DURATION = 3600; // One hour (seconds)
 const ROLE_SESSION_NAME = 'GitHubActions';
 const REGION_REGEX = /^[a-z0-9-]+$/g;
+const ROLE_SESSION_NAME_REGEX = /^[\w+=,.@-]*$/;
 
 export async function run() {
   try {
@@ -29,6 +31,8 @@ export async function run() {
     const sessionTokenInput = core.getInput('aws-session-token', { required: false });
     const SessionToken = sessionTokenInput === '' ? undefined : sessionTokenInput;
     const region = core.getInput('aws-region', { required: true });
+    const awsProfile = core.getInput('aws-profile', { required: false });
+    const overwriteAwsProfile = getBooleanInput('overwrite-aws-profile', { required: false });
     const roleToAssume = core.getInput('role-to-assume', { required: false });
     const audience = core.getInput('audience', { required: false });
     const maskAccountId = getBooleanInput('mask-aws-account-id', { required: false });
@@ -40,13 +44,16 @@ export async function run() {
     const roleSkipSessionTagging = getBooleanInput('role-skip-session-tagging', { required: false });
     const transitiveTagKeys = core.getMultilineInput('transitive-tag-keys', { required: false });
     const proxyServer = core.getInput('http-proxy', { required: false }) || process.env.HTTP_PROXY;
+    const customTags = core.getInput('custom-tags', { required: false });
     const inlineSessionPolicy = core.getInput('inline-session-policy', { required: false });
     const managedSessionPolicies = core.getMultilineInput('managed-session-policies', { required: false }).map((p) => {
       return { arn: p };
     });
     const roleChaining = getBooleanInput('role-chaining', { required: false });
     const outputCredentials = getBooleanInput('output-credentials', { required: false });
-    const outputEnvCredentials = getBooleanInput('output-env-credentials', { required: false, default: true });
+    // Default to always outputting environment credentials unless profile is specified. If profile is specified, default to
+    // no environment credentials (but still output them if the user specifically requests it).
+    const outputEnvCredentials = getBooleanInput('output-env-credentials', { required: false, default: !awsProfile });
     const unsetCurrentCredentials = getBooleanInput('unset-current-credentials', { required: false });
     let disableRetry = getBooleanInput('disable-retry', { required: false });
     const specialCharacterWorkaround = getBooleanInput('special-characters-workaround', { required: false });
@@ -58,6 +65,7 @@ export async function run() {
       .map((s) => s.trim());
     const forceSkipOidc = getBooleanInput('force-skip-oidc', { required: false });
     const noProxy = core.getInput('no-proxy', { required: false });
+    const stsEndpoint = core.getInput('sts-endpoint', { required: false });
     const globalTimeout = Number.parseInt(core.getInput('action-timeout-s', { required: false })) || 0;
 
     let timeoutId: NodeJS.Timeout | undefined;
@@ -82,6 +90,9 @@ export async function run() {
     } else if (maxRetries < 1) {
       maxRetries = 1;
     }
+
+    const withRetry = <T>(fn: () => Promise<T>, label: string): Promise<T> =>
+      retryAndBackoff(fn, !disableRetry, maxRetries, 0, 50, label);
 
     // Logic to decide whether to attempt to use OIDC or not
     const useGitHubOIDCProvider = () => {
@@ -118,15 +129,34 @@ export async function run() {
     if (!region.match(REGION_REGEX)) {
       throw new Error(`Region is not valid: ${region}`);
     }
+
+    if (roleSessionName.length < 2 || roleSessionName.length > 64) {
+      throw new Error(
+        `Role session name must be between 2 and 64 characters, got ${roleSessionName.length}: '${roleSessionName}'`,
+      );
+    }
+    if (!roleSessionName.match(ROLE_SESSION_NAME_REGEX)) {
+      throw new Error(
+        `Role session name is not valid: '${roleSessionName}'. Must satisfy regular expression pattern: [\\w+=,.@-]*`,
+      );
+    }
+
     exportRegion(region, outputEnvCredentials);
 
     // Instantiate credentials client
-    const clientProps: { region: string; proxyServer?: string; noProxy?: string; roleChaining: boolean } = {
+    const clientProps: {
+      region: string;
+      proxyServer?: string;
+      noProxy?: string;
+      stsEndpoint?: string;
+      roleChaining: boolean;
+    } = {
       region,
       roleChaining,
     };
     if (proxyServer) clientProps.proxyServer = proxyServer;
     if (noProxy) clientProps.noProxy = noProxy;
+    if (stsEndpoint) clientProps.stsEndpoint = stsEndpoint;
     const credentialsClient = new CredentialsClient(clientProps);
     let sourceAccountId: string;
     let webIdentityToken: string;
@@ -146,13 +176,9 @@ export async function run() {
     // Else, export credentials provided as input
     if (useGitHubOIDCProvider()) {
       try {
-        webIdentityToken = await retryAndBackoff(
-          async () => {
-            return core.getIDToken(audience);
-          },
-          !disableRetry,
-          maxRetries,
-        );
+        webIdentityToken = await withRetry(async () => {
+          return core.getIDToken(audience);
+        }, 'getIDToken');
       } catch (error) {
         throw new Error(`getIDToken call failed: ${errorMessage(error)}`);
       }
@@ -165,44 +191,59 @@ export async function run() {
       // the source credentials to already be masked as secrets
       // in any error messages.
       exportCredentials({ AccessKeyId, SecretAccessKey, SessionToken }, outputCredentials, outputEnvCredentials);
+
+      // If using IAM User Credentials, write to profile now so that the assumeRole call can succeed (and also for
+      // credential validation before role assumption).
+      if (awsProfile) {
+        writeProfileFiles(awsProfile, { AccessKeyId, SecretAccessKey, SessionToken }, region, overwriteAwsProfile);
+      }
     } else if (!webIdentityTokenFile && !roleChaining) {
       // Proceed only if credentials can be picked up
-      await credentialsClient.validateCredentials(undefined, roleChaining, expectedAccountIds);
-      sourceAccountId = await exportAccountId(credentialsClient, maskAccountId);
+      await withRetry(
+        () => credentialsClient.validateCredentials(undefined, roleChaining, expectedAccountIds),
+        'validateCredentials',
+      );
+      sourceAccountId = await withRetry(() => exportAccountId(credentialsClient, maskAccountId), 'exportAccountId');
     }
 
     if (AccessKeyId || roleChaining) {
       // Validate that the SDK can actually pick up credentials.
       // This validates cases where this action is using existing environment credentials,
       // and cases where the user intended to provide input credentials but the secrets inputs resolved to empty strings.
-      await credentialsClient.validateCredentials(AccessKeyId, roleChaining, expectedAccountIds);
-      sourceAccountId = await exportAccountId(credentialsClient, maskAccountId);
+      await withRetry(
+        () => credentialsClient.validateCredentials(AccessKeyId, roleChaining, expectedAccountIds),
+        'validateCredentials',
+      );
+      sourceAccountId = await withRetry(() => exportAccountId(credentialsClient, maskAccountId), 'exportAccountId');
+    }
+    if (customTags && (useGitHubOIDCProvider() || webIdentityTokenFile)) {
+      core.warning(
+        "'custom-tags' is set but will be ignored because session tags cannot be applied when using OIDC or web identity token authentication. " +
+          'Tags are controlled by the identity provider token claims in these authentication flows.',
+      );
     }
 
     // Get role credentials if configured to do so
     if (roleToAssume) {
       let roleCredentials: AssumeRoleCommandOutput;
       do {
-        roleCredentials = await retryAndBackoff(
-          async () => {
-            return assumeRole({
-              credentialsClient,
-              sourceAccountId,
-              roleToAssume,
-              roleExternalId,
-              roleDuration,
-              roleSessionName,
-              roleSkipSessionTagging,
-              transitiveTagKeys,
-              webIdentityTokenFile,
-              webIdentityToken,
-              inlineSessionPolicy,
-              managedSessionPolicies,
-            });
-          },
-          !disableRetry,
-          maxRetries,
-        );
+        roleCredentials = await withRetry(async () => {
+          return assumeRole({
+            credentialsClient,
+            sourceAccountId,
+            roleToAssume,
+            roleExternalId,
+            roleDuration,
+            roleSessionName,
+            roleSkipSessionTagging,
+            transitiveTagKeys,
+            webIdentityTokenFile,
+            webIdentityToken,
+            inlineSessionPolicy,
+            managedSessionPolicies,
+            customTags,
+          });
+        }, 'AssumeRole');
       } while (specialCharacterWorkaround && !verifyKeys(roleCredentials.Credentials));
       core.info(`Authenticated as assumedRoleId ${roleCredentials.AssumedRoleUser?.AssumedRoleId}`);
       exportCredentials(roleCredentials.Credentials, outputCredentials, outputEnvCredentials);
@@ -210,18 +251,58 @@ export async function run() {
       // First: self-hosted runners. If the GITHUB_ACTIONS environment variable
       //  is set to `true` then we are NOT in a self-hosted runner.
       // Second: Customer provided credentials manually (IAM User keys stored in GH Secrets)
-      if (!process.env.GITHUB_ACTIONS || AccessKeyId) {
-        await credentialsClient.validateCredentials(
-          roleCredentials.Credentials?.AccessKeyId,
-          roleChaining,
-          expectedAccountIds,
+      // If we are using a profile, don't validate credentials yet (since they most likely won't be in the environment).
+      // Wait until after creds are written to the profile file to try validation.
+      if ((!process.env.GITHUB_ACTIONS || AccessKeyId) && !awsProfile) {
+        await withRetry(
+          () =>
+            credentialsClient.validateCredentials(
+              roleCredentials.Credentials?.AccessKeyId,
+              roleChaining,
+              expectedAccountIds,
+            ),
+          'validateCredentials',
         );
       }
       if (outputEnvCredentials) {
-        await exportAccountId(credentialsClient, maskAccountId);
+        await withRetry(() => exportAccountId(credentialsClient, maskAccountId), 'exportAccountId');
+      }
+
+      // Write profile files if profile mode is enabled
+      if (awsProfile) {
+        if (!roleCredentials.Credentials) {
+          throw new Error('AssumeRole call succeeded but returned no credentials');
+        }
+        // If user provided IAM User Credentials and then we assumed a role, overwrite the profile file to add
+        // the session token. (this only overwrites the profile within a single run of the action).
+        // We then validate the credentials to make sure they work.
+        if (AccessKeyId || !process.env.GITHUB_ACTIONS) {
+          writeProfileFiles(awsProfile, roleCredentials.Credentials, region, true);
+          await withRetry(
+            () =>
+              credentialsClient.validateCredentials(
+                roleCredentials.Credentials?.AccessKeyId,
+                roleChaining,
+                expectedAccountIds,
+              ),
+            'validateCredentials',
+          );
+        } else {
+          writeProfileFiles(awsProfile, roleCredentials.Credentials, region, overwriteAwsProfile);
+        }
+
+        if (outputEnvCredentials) {
+          core.exportVariable('AWS_PROFILE', awsProfile);
+        }
       }
     } else {
       core.info('Proceeding with IAM user credentials');
+
+      if (awsProfile) {
+        if (outputEnvCredentials) {
+          core.exportVariable('AWS_PROFILE', awsProfile);
+        }
+      }
     }
 
     // Clear timeout on successful completion

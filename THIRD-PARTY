@@ -431,11 +431,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 -----------
 
-The following npm package may be included in this product:
+The following npm packages may be included in this product:
 
+ - @aws-crypto/crc32@5.2.0
  - @aws-crypto/util@5.2.0
 
-This package contains the following license:
+These packages each contain the following license:
 
 Apache License
                            Version 2.0, January 2004
@@ -643,16 +644,16 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/client-sts@3.1020.0
- - @aws-sdk/util-user-agent-browser@3.972.8
- - @aws-sdk/util-user-agent-node@3.973.13
- - @smithy/middleware-retry@4.4.45
- - @smithy/querystring-builder@4.2.12
- - @smithy/querystring-parser@4.2.12
- - @smithy/service-error-classification@4.2.12
- - @smithy/url-parser@4.2.12
- - @smithy/util-defaults-mode-browser@4.3.44
- - @smithy/util-defaults-mode-node@4.2.48
+ - @aws-sdk/client-sts@3.1045.0
+ - @aws-sdk/util-user-agent-browser@3.972.10
+ - @aws-sdk/util-user-agent-node@3.973.24
+ - @smithy/middleware-retry@4.5.7
+ - @smithy/querystring-builder@4.2.14
+ - @smithy/querystring-parser@4.2.14
+ - @smithy/service-error-classification@4.3.1
+ - @smithy/url-parser@4.2.14
+ - @smithy/util-defaults-mode-browser@4.3.49
+ - @smithy/util-defaults-mode-node@4.2.54
 
 These packages each contain the following license:
 
@@ -862,15 +863,17 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/middleware-host-header@3.972.8
- - @aws-sdk/middleware-recursion-detection@3.972.9
- - @aws-sdk/middleware-user-agent@3.972.27
- - @smithy/core@3.23.13
- - @smithy/invalid-dependency@4.2.12
- - @smithy/middleware-serde@4.2.16
- - @smithy/protocol-http@5.3.12
- - @smithy/smithy-client@4.12.8
- - @smithy/types@4.13.1
+ - @aws-sdk/middleware-host-header@3.972.10
+ - @aws-sdk/middleware-recursion-detection@3.972.11
+ - @aws-sdk/middleware-sdk-s3@3.972.37
+ - @aws-sdk/middleware-user-agent@3.972.38
+ - @aws-sdk/signature-v4-multi-region@3.996.25
+ - @smithy/core@3.24.1
+ - @smithy/invalid-dependency@4.2.14
+ - @smithy/middleware-serde@4.2.20
+ - @smithy/protocol-http@5.3.14
+ - @smithy/smithy-client@4.12.13
+ - @smithy/types@4.14.1
 
 These packages each contain the following license:
 
@@ -1080,11 +1083,12 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - agent-base@7.1.4
- - https-proxy-agent@7.0.6
- - pac-resolver@7.0.1
- - proxy-agent@6.5.0
- - socks-proxy-agent@8.0.5
+ - agent-base@9.0.0
+ - degenerator@7.0.1
+ - https-proxy-agent@9.0.0
+ - pac-resolver@9.0.1
+ - proxy-agent@8.0.1
+ - socks-proxy-agent@10.0.0
 
 These packages each contain the following license:
 
@@ -1115,7 +1119,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - http-proxy-agent@7.0.2
+ - http-proxy-agent@9.0.0
 
 This package contains the following license:
 
@@ -1146,8 +1150,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm packages may be included in this product:
 
- - data-uri-to-buffer@6.0.2
- - get-uri@6.0.5
+ - data-uri-to-buffer@8.0.0
+ - get-uri@8.0.0
 
 These packages each contain the following license:
 
@@ -1178,7 +1182,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - pac-proxy-agent@7.2.0
+ - pac-proxy-agent@9.0.1
 
 This package contains the following license:
 
@@ -1237,7 +1241,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - @actions/http-client@3.0.2
+ - @actions/http-client@4.0.1
 
 This package contains the following license:
 
@@ -1267,7 +1271,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - @aws-sdk/core@3.973.26
+ - @aws-sdk/core@3.974.8
 
 This package contains the following license:
 
@@ -1687,35 +1691,36 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/credential-provider-env@3.972.24
- - @aws-sdk/credential-provider-ini@3.972.27
- - @aws-sdk/credential-provider-node@3.972.28
- - @aws-sdk/region-config-resolver@3.972.10
- - @aws-sdk/token-providers@3.1020.0
- - @aws-sdk/types@3.973.6
- - @aws-sdk/util-endpoints@3.996.5
+ - @aws-sdk/credential-provider-env@3.972.34
+ - @aws-sdk/credential-provider-ini@3.972.38
+ - @aws-sdk/credential-provider-node@3.972.39
+ - @aws-sdk/region-config-resolver@3.972.13
+ - @aws-sdk/token-providers@3.1041.0
+ - @aws-sdk/types@3.973.8
+ - @aws-sdk/util-arn-parser@3.972.3
+ - @aws-sdk/util-endpoints@3.996.8
  - @aws-sdk/util-locate-window@3.965.5
- - @aws-sdk/xml-builder@3.972.16
- - @smithy/config-resolver@4.4.13
- - @smithy/credential-provider-imds@4.2.12
- - @smithy/fetch-http-handler@5.3.15
- - @smithy/hash-node@4.2.12
+ - @aws-sdk/xml-builder@3.972.22
+ - @smithy/config-resolver@4.4.17
+ - @smithy/credential-provider-imds@4.2.14
+ - @smithy/fetch-http-handler@5.3.17
+ - @smithy/hash-node@4.2.14
  - @smithy/is-array-buffer@2.2.0
  - @smithy/is-array-buffer@4.2.2
- - @smithy/middleware-content-length@4.2.12
- - @smithy/middleware-endpoint@4.4.28
- - @smithy/middleware-stack@4.2.12
- - @smithy/node-http-handler@4.5.1
- - @smithy/property-provider@4.2.12
- - @smithy/shared-ini-file-loader@4.4.7
- - @smithy/signature-v4@5.3.12
+ - @smithy/middleware-content-length@4.2.14
+ - @smithy/middleware-endpoint@4.4.32
+ - @smithy/middleware-stack@4.2.14
+ - @smithy/node-http-handler@4.7.1
+ - @smithy/property-provider@4.3.1
+ - @smithy/shared-ini-file-loader@4.4.9
+ - @smithy/signature-v4@5.3.14
  - @smithy/util-base64@4.3.2
  - @smithy/util-body-length-browser@4.2.2
  - @smithy/util-body-length-node@4.2.3
  - @smithy/util-buffer-from@2.2.0
  - @smithy/util-buffer-from@4.2.2
  - @smithy/util-hex-encoding@4.2.2
- - @smithy/util-stream@4.5.21
+ - @smithy/util-stream@4.5.25
  - @smithy/util-uri-escape@4.2.2
  - @smithy/util-utf8@2.3.0
  - @smithy/util-utf8@4.2.2
@@ -1929,9 +1934,9 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/credential-provider-process@3.972.24
- - @aws-sdk/credential-provider-sso@3.972.27
- - @aws-sdk/credential-provider-web-identity@3.972.27
+ - @aws-sdk/credential-provider-process@3.972.34
+ - @aws-sdk/credential-provider-sso@3.972.38
+ - @aws-sdk/credential-provider-web-identity@3.972.38
 
 These packages each contain the following license:
 
@@ -2141,8 +2146,8 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/middleware-logger@3.972.8
- - @smithy/node-config-provider@4.3.12
+ - @aws-sdk/middleware-logger@3.972.10
+ - @smithy/node-config-provider@4.3.14
  - @smithy/util-config-provider@4.2.2
 
 These packages each contain the following license:
@@ -2353,9 +2358,9 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @smithy/util-endpoints@3.3.3
- - @smithy/util-middleware@4.2.12
- - @smithy/util-retry@4.2.12
+ - @smithy/util-endpoints@3.4.2
+ - @smithy/util-middleware@4.2.14
+ - @smithy/util-retry@4.3.8
 
 These packages each contain the following license:
 
@@ -2565,9 +2570,9 @@ Apache License
 
 The following npm packages may be included in this product:
 
- - @aws-sdk/credential-provider-http@3.972.26
- - @aws-sdk/credential-provider-login@3.972.27
- - @aws-sdk/nested-clients@3.996.17
+ - @aws-sdk/credential-provider-http@3.972.36
+ - @aws-sdk/credential-provider-login@3.972.38
+ - @aws-sdk/nested-clients@3.997.6
 
 These packages each contain the following license:
 
@@ -2577,7 +2582,7 @@ Apache-2.0
 
 The following npm package may be included in this product:
 
- - ip-address@10.0.1
+ - ip-address@10.2.0
 
 This package contains the following license:
 
@@ -2664,7 +2669,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - basic-ftp@5.2.0
+ - basic-ftp@5.3.1
 
 This package contains the following license:
 
@@ -2791,8 +2796,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The following npm packages may be included in this product:
 
- - degenerator@5.0.1
- - netmask@2.0.2
+ - @nodable/entities@2.1.0
+ - quickjs-wasi@2.2.0
 
 These packages each contain the following license:
 
@@ -2802,7 +2807,37 @@ MIT
 
 The following npm package may be included in this product:
 
- - fast-xml-parser@5.5.8
+ - netmask@2.1.1
+
+This package contains the following license:
+
+MIT License
+
+Copyright (c) 2011 Olivier Poitrey rs@rhapsodyk.net
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - fast-xml-parser@5.7.2
 
 This package contains the following license:
 
@@ -2832,7 +2867,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - strnum@2.2.2
+ - strnum@2.2.3
 
 This package contains the following license:
 
@@ -2862,7 +2897,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - path-expression-matcher@1.2.0
+ - path-expression-matcher@1.5.0
 
 This package contains the following license:
 
@@ -2892,7 +2927,7 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - fast-xml-builder@1.1.4
+ - fast-xml-builder@1.1.9
 
 This package contains the following license:
 
@@ -2922,43 +2957,13 @@ SOFTWARE.
 
 The following npm package may be included in this product:
 
- - undici@6.24.0
+ - undici@6.25.0
 
 This package contains the following license:
 
 MIT License
 
 Copyright (c) Matteo Collina and Undici contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
------------
-
-The following npm package may be included in this product:
-
- - @tootallnate/quickjs-emscripten@0.23.0
-
-This package contains the following license:
-
-MIT License
-
-quickjs-emscripten copyright (c) 2019 Jake Teton-Landis
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -3035,7 +3040,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 The following npm package may be included in this product:
 
- - proxy-from-env@1.1.0
+ - proxy-from-env@2.1.0
 
 This package contains the following license:
 
@@ -3094,7 +3099,7 @@ THE SOFTWARE.
 
 The following npm package may be included in this product:
 
- - socks@2.8.7
+ - socks@2.8.8
 
 This package contains the following license:
 
@@ -3182,9 +3187,9 @@ SOFTWARE.
 
 The following npm packages may be included in this product:
 
- - @actions/core@2.0.2
- - @actions/exec@2.0.0
- - @actions/io@2.0.0
+ - @actions/core@3.0.1
+ - @actions/exec@3.0.0
+ - @actions/io@3.0.2
 
 These packages each contain the following license:
 
