@@ -83,6 +83,14 @@ const inputs = {
     'output-env-credentials': 'false',
     'output-credentials': 'true',
   },
+  IAM_ASSUMEROLE_NO_ENV_INPUTS: {
+    'aws-access-key-id': 'MYAWSACCESSKEYID',
+    'aws-secret-access-key': 'MYAWSSECRETACCESSKEY',
+    'role-to-assume': 'arn:aws:iam::111111111111:role/MY-ROLE',
+    'aws-region': 'fake-region-1',
+    'output-env-credentials': 'false',
+    'output-credentials': 'true',
+  },
 };
 
 const envs = {
@@ -93,6 +101,15 @@ const envs = {
   GITHUB_SHA: 'MY-COMMIT-ID',
   GITHUB_WORKSPACE: '/home/github',
   GITHUB_ACTIONS: 'true',
+  GITHUB_REF: 'refs/pull/42/merge',
+  GITHUB_EVENT_NAME: 'pull_request',
+  GITHUB_RUN_ID: '16412345678',
+  GITHUB_JOB: 'build',
+  GITHUB_REF_NAME: 'feature-branch',
+  GITHUB_REF_TYPE: 'branch',
+  GITHUB_BASE_REF: 'main',
+  GITHUB_HEAD_REF: 'feature-branch',
+  GITHUB_TRIGGERING_ACTOR: 'MY-USERNAME[bot]',
 };
 
 const outputs = {
