@@ -11,12 +11,13 @@ import {
   writeProfileFiles,
 } from '../src/profileManager';
 
-vi.mock('@actions/core');
 vi.mock('node:fs');
+vi.mock('@actions/core');
 
 describe('Profile Manager', {}, () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
     vol.reset();
   });
 
@@ -49,7 +50,7 @@ describe('Profile Manager', {}, () => {
 
     it('guards against __proto__ section pollution', {}, () => {
       const result = parseIni('[__proto__]\npolluted=true\n[safe]\nkey=val\n');
-      expect(result.__proto__).not.toHaveProperty('polluted');
+      expect(Object.getPrototypeOf(result)).not.toHaveProperty('polluted');
       expect(result.safe).toEqual({ key: 'val' });
     });
 
@@ -112,6 +113,22 @@ describe('Profile Manager', {}, () => {
     it('handles section with no keys', {}, () => {
       const result = stringifyIni({ dev: {} });
       expect(result).toBe('[dev]\n');
+    });
+
+    it('rejects values containing newlines', {}, () => {
+      expect(() =>
+        stringifyIni({ dev: { aws_session_token: 'token\n[injected]\ncredential_process = evil' } }),
+      ).toThrow('must not contain newline characters');
+    });
+
+    it('rejects keys containing newlines', {}, () => {
+      expect(() => stringifyIni({ dev: { 'key\ninjected': 'val' } })).toThrow('must not contain newline characters');
+    });
+
+    it('rejects section names containing newlines', {}, () => {
+      expect(() => stringifyIni({ 'dev\r\n[injected]': { key: 'val' } })).toThrow(
+        'must not contain newline characters',
+      );
     });
   });
 
@@ -420,6 +437,24 @@ describe('Profile Manager', {}, () => {
 
       expect(configParsed['profile dev']).toBeDefined();
       expect(configParsed['profile dev'].region).toBe('us-east-1');
+    });
+
+    it('refuses to write credentials containing newlines instead of injecting profiles', {}, () => {
+      expect(() =>
+        writeProfileFiles(
+          'dev',
+          {
+            AccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+            SecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            SessionToken: 'token\n[injected]\ncredential_process = evil-command',
+          },
+          'us-east-1',
+          false,
+        ),
+      ).toThrow('must not contain newline characters');
+
+      const credsPath = getProfileFilePaths().credentials;
+      expect(fs.existsSync(credsPath)).toBe(false);
     });
 
     it('uses correct section naming for default profile', {}, () => {
@@ -733,6 +768,71 @@ describe('Profile Manager', {}, () => {
       expect(configContent).toBe(
         '[profile dev]\n' + 'region = us-east-1\n' + '\n' + '[profile prod]\n' + 'region = us-west-2\n',
       );
+    });
+  });
+
+  describe('symlink hardening', {}, () => {
+    const credsPath = '/home/user/.aws/credentials';
+    const configPath = '/home/user/.aws/config';
+
+    beforeEach(() => {
+      process.env.AWS_SHARED_CREDENTIALS_FILE = credsPath;
+      process.env.AWS_CONFIG_FILE = configPath;
+    });
+
+    it('mergeProfileSection refuses when the credentials path is a symlink and leaves the target unchanged', {}, () => {
+      fs.mkdirSync('/home/user/.aws', { recursive: true });
+      fs.mkdirSync('/etc', { recursive: true });
+      fs.writeFileSync('/etc/passwd', 'root:x:0:0::/root:/bin/sh');
+      fs.symlinkSync('/etc/passwd', credsPath);
+
+      expect(() => mergeProfileSection(credsPath, 'dev', { aws_access_key_id: 'AKIA' }, true)).toThrow(
+        /Refusing .* \(.* symbolic link\)/,
+      );
+      expect(fs.readFileSync('/etc/passwd', 'utf-8')).toBe('root:x:0:0::/root:/bin/sh');
+    });
+
+    it('mergeProfileSection refuses when the config path is a symlink', {}, () => {
+      fs.mkdirSync('/home/user/.aws', { recursive: true });
+      fs.mkdirSync('/etc', { recursive: true });
+      fs.writeFileSync('/etc/sensitive', 'do not overwrite');
+      fs.symlinkSync('/etc/sensitive', configPath);
+
+      expect(() => mergeProfileSection(configPath, 'profile dev', { region: 'us-east-1' }, true)).toThrow(
+        /Refusing .* \(.* symbolic link\)/,
+      );
+      expect(fs.readFileSync('/etc/sensitive', 'utf-8')).toBe('do not overwrite');
+    });
+
+    it('ensureAwsDirectoryExists refuses when ~/.aws is a symlink', {}, () => {
+      fs.mkdirSync('/real-target', { recursive: true });
+      fs.mkdirSync('/home/user', { recursive: true });
+      fs.symlinkSync('/real-target', '/home/user/.aws');
+
+      expect(() => ensureAwsDirectoryExists(credsPath)).toThrow(/Refusing .* \(.* symbolic link\)/);
+    });
+
+    it('writeProfileFiles refuses to overwrite a pre-existing symlink at the credentials path', {}, () => {
+      fs.mkdirSync('/home/user/.aws', { recursive: true });
+      fs.mkdirSync('/etc', { recursive: true });
+      fs.writeFileSync('/etc/passwd', 'root:x:0:0::/root:/bin/sh');
+      fs.symlinkSync('/etc/passwd', credsPath);
+
+      expect(() =>
+        writeProfileFiles('dev', { AccessKeyId: 'AKIA', SecretAccessKey: 'secret' }, 'us-east-1', true),
+      ).toThrow(/Refusing .* \(.* symbolic link\)/);
+
+      expect(fs.lstatSync(credsPath).isSymbolicLink()).toBe(true);
+      expect(fs.readFileSync('/etc/passwd', 'utf-8')).toBe('root:x:0:0::/root:/bin/sh');
+    });
+
+    it('happy path still writes both files with mode 0o600 when no symlinks are present', {}, () => {
+      writeProfileFiles('dev', { AccessKeyId: 'AKIA', SecretAccessKey: 'secret' }, 'us-east-1', false);
+
+      expect(fs.statSync(credsPath).mode & 0o777).toBe(0o600);
+      expect(fs.statSync(configPath).mode & 0o777).toBe(0o600);
+      expect(fs.lstatSync(credsPath).isSymbolicLink()).toBe(false);
+      expect(fs.lstatSync(configPath).isSymbolicLink()).toBe(false);
     });
   });
 });
